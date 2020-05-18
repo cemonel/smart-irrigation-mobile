@@ -1,5 +1,6 @@
 package com.cem.smart_irrigation_mobile;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -19,7 +20,10 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -33,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public JSONObject response;
     public JSONArray plant_list_response;
     Spinner spinner;
+    LineChart lineChart;
 
     String URL = "http://192.168.1.100:7373";
 
@@ -66,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
         final Gson gson = new Gson();
+        lineChart = findViewById(R.id.lineChart);
+        lineChart.setVisibility(View.GONE);
 
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, URL + "/plant/list/",
@@ -191,6 +198,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             humidityText.setText(String.format("%s %%", jsonObject.getString("current_air_humidity")));
                             TextView soilText = findViewById(R.id.soil_moisture_text);
                             soilText.setText(String.format("%s", jsonObject.getString("current_soil_moisture")));
+                            String temp_soil_max = jsonObject.getString("max_soil_moisture");
+                            String temp_soil_min = jsonObject.getString("min_soil_moisture");
+                            maxSoilMoisture = Integer.parseInt(temp_soil_max.substring(1, temp_soil_max.length() - 1));
+                            minSoilMoisture = Integer.parseInt(temp_soil_min.substring(1, temp_soil_min.length() - 1));
 
                         }
                         catch (Exception e){
@@ -213,10 +224,38 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         System.out.println("Plant data detail geldi");
                         try {
                             JSONArray jsonArray = new JSONArray(response);
-                            LineChart lineChart = findViewById(R.id.lineChart);
-                            List<LineData> lineData = new ArrayList<>();
+                            JSONArray newJsonArray = new JSONArray();
+                            for (int i = jsonArray.length()-1; i>=0; i--) { // reverse
+                                newJsonArray.put(jsonArray.get(i));
+                            }
+                            List<Entry> yTempValues = new ArrayList<>();
+                            List<Entry> ySoilValues = new ArrayList<>();
+                            List<Entry> yHumValues = new ArrayList<>();
+                            for (int i = 0; i < newJsonArray.length(); i++){
+                                JSONObject jsonObject =  (JSONObject) newJsonArray.get(i);
+                                yTempValues.add(new Entry(i, (float)jsonObject.getDouble("air_temperature")));
+                                ySoilValues.add(new Entry(i, (float)jsonObject.getDouble("soil_moisture") / 1024 * 100));
+                                yHumValues.add(new Entry(i, (float)jsonObject.getDouble("air_humidity")));
+                            }
 
-                            System.out.println(jsonArray);
+                            LineDataSet set1 = new LineDataSet(yTempValues, "Temperature");
+                            LineDataSet set2 = new LineDataSet(ySoilValues, "Soil Moisture");
+                            LineDataSet set3 = new LineDataSet(yHumValues, "Air Humidity");
+                            set1.setFillAlpha(100);
+                            set1.setColor(Color.RED);
+                            set2.setFillAlpha(100);
+                            set2.setColor(Color.GREEN);
+                            set3.setFillAlpha(100);
+                            set3.setColor(Color.BLUE);
+
+
+                            ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+                            dataSets.add(set1);
+                            dataSets.add(set2);
+                            dataSets.add(set3);
+                            LineData lineData = new LineData(dataSets);
+                            lineChart.setData(lineData);
+                            lineChart.setVisibility(View.VISIBLE);
 
                         }
                         catch (Exception e){
