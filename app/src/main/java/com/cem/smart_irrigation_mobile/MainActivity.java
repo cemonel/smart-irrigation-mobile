@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         final RequestQueue plants_queue = Volley.newRequestQueue(this);
 
         Plant plant = (Plant) parent.getItemAtPosition(pos);
-        StringRequest plantDetailRequest = new StringRequest(Request.Method.GET, URL + "/plant/" + plant.id + "/detail/",
+        StringRequest plantDetailRequest = new StringRequest(Request.Method.GET, URL + "/plant/" + plantID + "/detail/",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -198,10 +198,35 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             humidityText.setText(String.format("%s %%", jsonObject.getString("current_air_humidity")));
                             TextView soilText = findViewById(R.id.soil_moisture_text);
                             soilText.setText(String.format("%s", jsonObject.getString("current_soil_moisture")));
-                            String temp_soil_max = jsonObject.getString("max_soil_moisture");
-                            String temp_soil_min = jsonObject.getString("min_soil_moisture");
-                            maxSoilMoisture = Integer.parseInt(temp_soil_max.substring(1, temp_soil_max.length() - 1));
-                            minSoilMoisture = Integer.parseInt(temp_soil_min.substring(1, temp_soil_min.length() - 1));
+
+                            TextView text3 = findViewById(R.id.textView3);
+                            TextView text4 = findViewById(R.id.textView4);
+                            TextView text5 = findViewById(R.id.textView5);
+                            TextView text6 = findViewById(R.id.textView6);
+                            TextView text7 = findViewById(R.id.textView7);
+                            TextView text8 = findViewById(R.id.textView8);
+                            TextView text9 = findViewById(R.id.textView9);
+                            TextView text10 = findViewById(R.id.textView10);
+                            TextView text11 = findViewById(R.id.textView11);
+                            TextView text12 = findViewById(R.id.textView12);
+                            TextView text13 = findViewById(R.id.textView13);
+
+                            text13.setText(String.format("Last Irrigation Date: %s", jsonObject.getString("last_irrigation_date")));
+                            text12.setText("More Details");
+
+                            System.out.println(jsonObject.getString("max_soil_moisture"));
+
+                            text3.setText(String.format("Maximum soil moisture: %s", jsonObject.getString("max_soil_moisture")));
+                            text4.setText(String.format("Minimum soil moisture: %s", jsonObject.getString("min_soil_moisture")));
+                            text5.setText(String.format("Average soil moisture: %s", jsonObject.getJSONObject("avg_soil_moisture").getString("soil_moisture__avg")));
+
+                            text6.setText(String.format("Maximum air temperature: %s", jsonObject.getString("max_temperature")));
+                            text7.setText(String.format("Minimum air temperature: %s", jsonObject.getString("min_temperature")));
+                            text8.setText(String.format("Average air temperature: %s", jsonObject.getJSONObject("avg_temperature").getString("air_temperature__avg")));
+
+                            text9.setText(String.format("Maximum air humidity: %s", jsonObject.getString("max_air_humidity")));
+                            text10.setText(String.format("Minimum air humidity: %s", jsonObject.getString("min_air_humidity")));
+                            text11.setText(String.format("Average air humidity: %s", jsonObject.getJSONObject("avg_air_humidity").getString("air_humidity__avg")));
 
                         }
                         catch (Exception e){
