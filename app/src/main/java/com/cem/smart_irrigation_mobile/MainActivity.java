@@ -17,12 +17,14 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.DefaultValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.gson.Gson;
 
@@ -179,6 +181,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public void onItemSelected(AdapterView<?> parent, View view,
                                int pos, long id) {
         final RequestQueue plants_queue = Volley.newRequestQueue(this);
+        RequestFuture<JSONObject> future = RequestFuture.newFuture();
 
         Plant plant = (Plant) parent.getItemAtPosition(pos);
         StringRequest plantDetailRequest = new StringRequest(Request.Method.GET, URL + "/plant/" + plantID + "/detail/",
@@ -214,7 +217,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             text13.setText(String.format("Last Irrigation Date: %s", jsonObject.getString("last_irrigation_date")));
                             text12.setText("More Details");
 
-                            System.out.println(jsonObject.getString("max_soil_moisture"));
+                            maxSoilMoisture = Integer.parseInt(jsonObject.getString("max_soil_as_analog"));
+                            minSoilMoisture = Integer.parseInt(jsonObject.getString("min_soil_as_analog"));
+                            System.out.println("MIN ANALOG" + jsonObject.getString("min_soil_as_analog"));
+                            System.out.println("MAX ANALOG" + jsonObject.getString("max_soil_as_analog"));
+
 
                             text3.setText(String.format("Maximum soil moisture: %s", jsonObject.getString("max_soil_moisture")));
                             text4.setText(String.format("Minimum soil moisture: %s", jsonObject.getString("min_soil_moisture")));
@@ -247,19 +254,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     @Override
                     public void onResponse(String response) {
                         System.out.println("Plant data detail geldi");
+                        float value;
                         try {
                             JSONArray jsonArray = new JSONArray(response);
-                            JSONArray newJsonArray = new JSONArray();
-                            for (int i = jsonArray.length()-1; i>=0; i--) { // reverse
-                                newJsonArray.put(jsonArray.get(i));
-                            }
+                            JSONArray newJsonArray = jsonArray;
                             List<Entry> yTempValues = new ArrayList<>();
                             List<Entry> ySoilValues = new ArrayList<>();
                             List<Entry> yHumValues = new ArrayList<>();
                             for (int i = 0; i < newJsonArray.length(); i++){
                                 JSONObject jsonObject =  (JSONObject) newJsonArray.get(i);
                                 yTempValues.add(new Entry(i, (float)jsonObject.getDouble("air_temperature")));
-                                ySoilValues.add(new Entry(i, (float)jsonObject.getDouble("soil_moisture") / 1024 * 100));
+                                ySoilValues.add(new Entry(i, ((652 - (float)jsonObject.getDouble("soil_moisture"))) / 330 * 100));
                                 yHumValues.add(new Entry(i, (float)jsonObject.getDouble("air_humidity")));
                             }
 
@@ -273,6 +278,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             set3.setFillAlpha(100);
                             set3.setColor(Color.BLUE);
 
+                            set1.setDrawCircles(false);
+                            set2.setDrawCircles(false);
+                            set3.setDrawCircles(false);
 
                             ArrayList<ILineDataSet> dataSets = new ArrayList<>();
                             dataSets.add(set1);
