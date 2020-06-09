@@ -41,10 +41,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     Spinner spinner;
     LineChart lineChart;
 
+    TextView text3;
+    TextView text4;
+    TextView text5;
+    TextView text6;
+    TextView text7;
+    TextView text8;
+    TextView text9;
+    TextView text10;
+    TextView text11;
+    TextView text12;
+    TextView text13;
+
     String URL = "http://192.168.1.100:7373";
 
     int plantID = 1;
-    String plantName;
 
     float currentSoilMoisture;
     float currentAirHumidty;
@@ -62,6 +73,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     float avgAirHumidty;
     float avgAirTemperature;
 
+    TextView plantName;
+    TextView temperatureText;
+    TextView humidityText;
+    TextView soilText;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +86,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         setContentView(R.layout.activity_main);
         spinner = findViewById(R.id.spinner);
         final RequestQueue queue = Volley.newRequestQueue(this);
+
+        text3 = findViewById(R.id.textView3);
+        text4 = findViewById(R.id.textView4);
+        text5 = findViewById(R.id.textView5);
+        text6 = findViewById(R.id.textView6);
+        text7 = findViewById(R.id.textView7);
+        text8 = findViewById(R.id.textView8);
+        text9 = findViewById(R.id.textView9);
+        text10 = findViewById(R.id.textView10);
+        text11 = findViewById(R.id.textView11);
+        text12 = findViewById(R.id.textView12);
+        text13 = findViewById(R.id.textView13);
+
+        plantName = findViewById(R.id.plantName);
+        temperatureText = findViewById(R.id.temperature_text);
+        humidityText = findViewById(R.id.humidity_text);
+        soilText = findViewById(R.id.soil_moisture_text);
 
 
         final Gson gson = new Gson();
@@ -183,36 +216,42 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         final RequestQueue plants_queue = Volley.newRequestQueue(this);
         RequestFuture<JSONObject> future = RequestFuture.newFuture();
 
-        Plant plant = (Plant) parent.getItemAtPosition(pos);
-        StringRequest plantDetailRequest = new StringRequest(Request.Method.GET, URL + "/plant/" + plantID + "/detail/",
+        final Plant plant = (Plant) parent.getItemAtPosition(pos);
+        StringRequest plantDetailRequest = new StringRequest(Request.Method.GET, URL + "/plant/" + plant.id + "/detail/",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
                         System.out.println("Plant detail geldi");
                         try {
+                            text3.clearComposingText();
+                            text4.clearComposingText();
+                            text5.clearComposingText();
+                            text6.clearComposingText();
+                            text7.clearComposingText();
+                            text8.clearComposingText();
+                            text9.clearComposingText();
+                            text10.clearComposingText();
+                            text11.clearComposingText();
+                            text12.clearComposingText();
+                            text13.clearComposingText();
+
+                            plantName.clearComposingText();
+                            soilText.clearComposingText();
+                            humidityText.clearComposingText();
+                            temperatureText.clearComposingText();
+
                             JSONObject jsonObject = new JSONObject(response);
                             plantID = jsonObject.getInt("id");
-                            TextView plantName = findViewById(R.id.plantName);
-                            TextView temperatureText = findViewById(R.id.temperature_text);
+                            plantName = findViewById(R.id.plantName);
+                            temperatureText = findViewById(R.id.temperature_text);
                             plantName.setText(String.format("%s  Details", jsonObject.getString("name").toUpperCase()));
                             temperatureText.setText(jsonObject.getString("current_temperature") + "°C");
-                            TextView humidityText = findViewById(R.id.humidity_text);
+                            humidityText = findViewById(R.id.humidity_text);
                             humidityText.setText(String.format("%s %%", jsonObject.getString("current_air_humidity")));
-                            TextView soilText = findViewById(R.id.soil_moisture_text);
+                            soilText = findViewById(R.id.soil_moisture_text);
                             soilText.setText(String.format("%s", jsonObject.getString("current_soil_moisture")));
 
-                            TextView text3 = findViewById(R.id.textView3);
-                            TextView text4 = findViewById(R.id.textView4);
-                            TextView text5 = findViewById(R.id.textView5);
-                            TextView text6 = findViewById(R.id.textView6);
-                            TextView text7 = findViewById(R.id.textView7);
-                            TextView text8 = findViewById(R.id.textView8);
-                            TextView text9 = findViewById(R.id.textView9);
-                            TextView text10 = findViewById(R.id.textView10);
-                            TextView text11 = findViewById(R.id.textView11);
-                            TextView text12 = findViewById(R.id.textView12);
-                            TextView text13 = findViewById(R.id.textView13);
 
                             text13.setText(String.format("Last Irrigation Date: %s", jsonObject.getString("last_irrigation_date")));
                             text12.setText("More Details");
@@ -255,6 +294,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     public void onResponse(String response) {
                         System.out.println("Plant data detail geldi");
                         float value;
+                        lineChart.clear();
                         try {
                             JSONArray jsonArray = new JSONArray(response);
                             JSONArray newJsonArray = jsonArray;
@@ -264,8 +304,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             for (int i = 0; i < newJsonArray.length(); i++){
                                 JSONObject jsonObject =  (JSONObject) newJsonArray.get(i);
                                 yTempValues.add(new Entry(i, (float)jsonObject.getDouble("air_temperature")));
-                                ySoilValues.add(new Entry(i, ((652 - (float)jsonObject.getDouble("soil_moisture"))) / 330 * 100));
+                                ySoilValues.add(new Entry(i, ((minSoilMoisture - (float)jsonObject.getDouble("soil_moisture"))) / (minSoilMoisture-maxSoilMoisture) * 100));
                                 yHumValues.add(new Entry(i, (float)jsonObject.getDouble("air_humidity")));
+                                System.out.printf("%f/n", (float)jsonObject.getDouble("air_temperature"));
                             }
 
                             LineDataSet set1 = new LineDataSet(yTempValues, "Temperature");
@@ -304,8 +345,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         });
 
-        plants_queue.add(plantDetailRequest);
         plants_queue.add(plantDataRequest);
+        plants_queue.add(plantDetailRequest);
+
     }
 
     public void onNothingSelected(AdapterView<?> parent) {
